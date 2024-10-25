@@ -1,103 +1,146 @@
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
-    <title>Clothe Store App</title>
+
+    <!-- Bootstrap and Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <title>Petstore App</title>
 </head>
-<body>
-    <div id="app">
-        <header class="bg-primary text-white text-center py-4">
-            <h1 v-text="sitename"></h1>
-            <button class="btn btn-info">
-                <strong>{{ cartItemCount }}</strong> <span class="fas fa-cart-plus"></span> Checkout
+<body class="bg-light text-dark">
+    <div id="app" class="container my-5">
+
+        <!-- Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary">{{ sitename }}</h1>
+            <button class="btn btn-primary" v-on:click="showCheckout">
+                <span class="me-2">{{ itemsInTheCart }}</span>
+                <i class="fa-solid fa-cart-shopping"></i> Checkout
             </button>
         </header>
 
-        <main class="container mt-4">
-            <div class="row">
-                <!-- Loop through products -->
-                <div v-for="product in products" :key="product.id" class="col-md-6 mb-4">
-                    <div class="card">
-                        <figure class="text-center">
-                            <img v-bind:src="product.image" class="img-fluid w-50" alt="Product image">
-                        </figure>
-                        <div class="card-body text-center">
-                            <h4 v-text="product.title"></h4>
-                            <p v-html="product.description"></p>
-                            <p>Price: {{ product.price }}</p>
+        <!-- Main Content -->
+        <main>
+            <!-- Product View -->
+            <div v-if="showProduct" class="card mb-4 p-3">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <img v-bind:src="product.image" class="img-fluid" style="width: 100%; height: auto;">
+                    </div>
+                    <div class="col-md-8">
+                        <h2 v-text="product.title" class="text-primary mb-3"></h2>
+                        <p v-text="product.description" class="text-secondary mb-2"></p>
+                        <p><strong>Price:</strong> ${{ product.price }}</p>
 
-                            <!-- Add dynamic Add to Cart button -->
-                            <!-- Enabled button -->
-                            <button class="btn btn-primary" v-if="canAddToCart(product)" v-on:click="addToCart(product.id)">
-                                Add to Cart
-                            </button>
-                            <!-- Disabled button -->
-                            <button class="btn btn-secondary" disabled v-else>
-                                Add to Cart
-                            </button>
-                        </div>
+                        <button 
+                            class="btn btn-warning mt-3" 
+                            v-if="canAddToTheCart" 
+                            v-on:click="addItemToTheCart">
+                            Add to Cart
+                        </button>
+                        <button class="btn btn-secondary mt-3" v-else disabled>
+                            Add to Cart (Out of Stock)
+                        </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Checkout Page -->
+            <div v-else>
+                <h1 class="text-primary">Welcome to the Checkout page</h1>
+                <form @submit.prevent="submitCheckOutForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label"><strong>Name:</strong></label>
+                        <input type="text" v-model.trim="order.name" class="form-control" id="name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="surname" class="form-label"><strong>Surname:</strong></label>
+                        <input type="text" v-model.trim="order.surname" class="form-control" id="surname">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label"><strong>Address:</strong></label>
+                        <input type="text" v-model.trim="order.Address" class="form-control" id="address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="state" class="form-label"><strong>State:</strong></label>
+                        <select v-model="order.State" class="form-select" id="state">
+                            <option disabled>Select State</option>
+                            <option v-for="(state, key) in states" :value="state">{{ key }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zip" class="form-label"><strong>Zip/Postal Code:</strong></label>
+                        <input type="number" v-model.number="order.Zip" class="form-control" id="zip">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" id="gift" class="form-check-input" v-model="order.gift">
+                        <label class="form-check-label" for="gift">Send as a gift?</label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="radio" id="home" value="Home" v-model="order.method" class="form-check-input">
+                        <label class="form-check-label" for="home">Home</label>
+                        <input type="radio" id="business" value="Business" v-model="order.method" class="form-check-input ms-3">
+                        <label class="form-check-label" for="business">Business</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Place Order</button>
+                </form>
             </div>
         </main>
     </div>
 
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
     <script>
         let webstore = new Vue({
             el: "#app",
             data: {
-                sitename: "This is my clothe store",
-                products: [
-                    {
-                        id: 1001,
-                        title: "The first dress",
-                        description: "Open see-through dress that does blab bla bla bla.",
-                        price: "200",
-                        image: "https://images.unsplash.com/photo-1509869175650-a1d97972541a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                        availableInventory: 5
-                    },
-                    {
-                        id: 1002,
-                        title: "Stylish Casual T-Shirt",
-                        description: "A comfortable, casual t-shirt perfect for everyday wear.",
-                        price: "50",
-                        image: "https://images.unsplash.com/photo-1543109740-4bdb38fda756?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                        availableInventory: 10
-                    },
-                    {
-                        id: 1003,
-                        title: "Elegant Evening Gown",
-                        description: "An elegant gown for formal events and special occasions.",
-                        price: "350",
-                        image: "https://images.unsplash.com/photo-1621361365424-06f0e1eb5c49?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                        availableInventory: 3
-                    }
-                ],
-                cart: [] // Array to store items added to the cart
+                sitename: "Pet Store App",
+                showProduct: true,
+                product: {
+                    id: 1001,
+                    title: "Cat Food, 25lb bag",
+                    description: "A 25 pound bag of irresistible, organic goodness for your cat.",
+                    price: 2000,
+                    image: "images/product-fullsize.jpg",
+                    availableInventory: 5
+                },
+                cart: [],
+                order: {
+                    name: "",
+                    surname: "",
+                    Address: "",
+                    State: "",
+                    Zip: "",
+                    gift: "Do not send as a gift",
+                    method: "Home"
+                },
+                states: {
+                    AL: "Alabama",
+                    AR: "Arizona",
+                    CA: "California",
+                    NV: "Nevada"
+                }
             },
             methods: {
-                addToCart: function(productId) {
-                    this.cart.push(productId); // Add the specific product ID to the cart
+                showCheckout() {
+                    this.showProduct = !this.showProduct;
                 },
-                canAddToCart: function(product) {
-                    // Check how many of the current product are already in the cart
-                    let productCountInCart = this.cart.filter(id => id === product.id).length;
-                    return product.availableInventory > productCountInCart;
+                addItemToTheCart() {
+                    this.cart.push(this.product.id);
+                },
+                submitCheckOutForm() {
+                    alert("Congratulations, order submitted :)");
                 }
             },
             computed: {
-                cartItemCount: function() {
+                itemsInTheCart() {
                     return this.cart.length || "";
+                },
+                canAddToTheCart() {
+                    return this.product.availableInventory > this.itemsInTheCart;
                 }
             }
         });
