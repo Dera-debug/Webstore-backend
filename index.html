@@ -21,19 +21,57 @@
         <!-- Header -->
         <header class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="text-primary">{{ sitename }}</h1>
-            <button class="btn btn-primary" v-on:click="showCheckout">
+            <button class="btn btn-primary" v-on:click="showCheckout" :disabled="itemsInTheCart === 0">
                 <span class="me-2">{{ itemsInTheCart }}</span>
                 <i class="fa-solid fa-cart-shopping"></i> Checkout
             </button>
         </header>
 
+            <!-- Top Navigation Bar for Filters -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 p-3 rounded" v-if="showProduct">
+                <div class="container-fluid">
+                    <!-- Search Bar -->
+                    <input type="text" v-model="searchQuery" placeholder="Search..." class="form-control me-3" style="max-width: 200px;">
+    
+                    <!-- Filter by Price -->
+                    <div class="me-3">
+                        <strong>Price:</strong>
+                        <select v-model="filters.price" class="form-select">
+                            <option value="">All</option>
+                            <option value="low">Low to High</option>
+                            <option value="high">High to Low</option>
+                        </select>
+                    </div>
+    
+                    <!-- Filter by Subject -->
+                    <div class="me-3">
+                        <strong>Subject:</strong>
+                        <select v-model="filters.subject" class="form-select">
+                            <option value="">All</option>
+                            <option v-for="subject in uniqueSubjects" :value="subject">{{ subject }}</option>
+                        </select>
+                    </div>
+    
+                    <!-- Filter by Availability -->
+                    <div class="form-check form-switch me-3">
+                        <input class="form-check-input" type="checkbox" id="in-stock" v-model="filters.inStock">
+                        <label class="form-check-label" for="in-stock">In Stock</label>
+                    </div>
+    
+                    <!-- Filter by Location -->
+                    <div>
+                        <strong>Location:</strong>
+                        <input type="text" v-model="filters.location" placeholder="Location..." class="form-control">
+                    </div>
+                </div>
+            </nav>
 
         
         <!-- Main Content -->
         <main>
             <!-- Product View -->
             <div v-if="showProduct" class="row g-4">
-                <div v-for="product in sortedProducts" :key="product.id" class="col-sm-12 col-md-6 col-lg-3">
+                <div v-for="product in filteredProducts" :key="product.id" class="col-sm-12 col-md-6 col-lg-3">
                     <div class="card h-100 p-3">
                         <!-- Product Image -->
                         <img :src="product.image" class="card-img-top img-fluid" style="height: 200px; object-fit: cover;">
@@ -42,6 +80,7 @@
                         <div class="card-body">
                             <h5 class="card-title text-primary">{{ product.title }}</h5>
                             <p class="card-text text-secondary">{{ product.description }}</p>
+                             <p class="card-text text-secondary"><strong> Location: </strong>{{ product.location }}</p> 
                             <p><strong>Price:</strong> ${{ product.price }}</p>
 
                             <!-- Add to Cart Button -->
@@ -134,6 +173,15 @@
                 products: products,
                 
                 cart: [],
+
+                searchQuery: "",  // Added searchQuery to make it reactive
+        filters: {  // Added filters to make it reactive
+            price: "",
+            subject: "",
+            inStock: false,
+            location: ""
+        },
+
                 order: {
                     name: "",
                     surname: "",
@@ -174,26 +222,88 @@
                 },
                 itemsLeft(product) {
                     return product.availableInventory - this.cartCount(product.id);
+                },
+
+                applyFilters() {
+                    // Custom logic for applying filters can be added here
+                },
+                canAddToTheCart(product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                cartCount(id) {
+                    return this.cart.filter(cartItem => cartItem === id).length;
+                },
+                itemsLeft(product) {
+                    return product.availableInventory - this.cartCount(product.id);
                 }
+
             },
             computed: {
                 itemsInTheCart() {
-                    return this.cart.length || "";
+                    return this.cart.length || 0;
                 },
 
-              sortedProducts(){
-                function compare(a,b){
-                    if (a.price > b.price) return -1;
-                    if (a.price < b.price) return 1;
-                    return 0;
-                }
+            //   sortedProducts(){
+            //     function compare(a,b){
+            //         if (a.price > b.price) return -1;
+            //         if (a.price < b.price) return 1;
+            //         return 0;
+            //     }
 
-                return this.products.sort (compare);
-              }
+            //     return this.products.sort (compare);
+            //   },
+
+            //   uniqueSubjects() {
+            //         return [...new Set(this.products.map(product => product.subject))];
+            //     },
+            //     filteredProducts() {
+            //         return this.products.filter(product => {
+            //             let matchesSearch = product.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+            //             let matchesPrice = !this.filters.price ||
+            //                 (this.filters.price === "low" ? product.price <= 50 : product.price > 50);
+            //             let matchesSubject = !this.filters.subject || product.subject === this.filters.subject;
+            //             let matchesInStock = !this.filters.inStock || product.availableInventory > 0;
+            //             let matchesLocation = !this.filters.location || product.location.includes(this.filters.location);
+
+            //             return matchesSearch && matchesPrice && matchesSubject && matchesInStock && matchesLocation;
+            //         });
+            //     }
                
+
+            filteredProducts() {
+        // Filter products based on searchQuery, price, subject, inStock, and location
+        let filtered = this.products.filter(product => {
+            let matchesSearch = product.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+        //    console.log("Matches search:", matchesSearch, "for product:", product.title);
+           
+            let matchesPrice = !this.filters.price ||
+                (this.filters.price === "low" ? product.price <= 50 : product.price > 50);
+            let matchesSubject = !this.filters.subject || product.subject === this.filters.subject;
+            let matchesInStock = !this.filters.inStock || product.availableInventory > 0;
+            let matchesLocation = !this.filters.location || product.location.includes(this.filters.location);
+
+            return matchesSearch && matchesPrice && matchesSubject && matchesInStock && matchesLocation;
+        });
+
+        // Apply sorting based on selected price filter
+        if (this.filters.price === "low") {
+            filtered.sort((a, b) => a.price - b.price);
+        } else if (this.filters.price === "high") {
+            filtered.sort((a, b) => b.price - a.price);
+        }
+
+        return filtered;
+    },
+
+    uniqueSubjects() {
+        return [...new Set(this.products.map(product => product.subject))];
+    }
+
+
             }
         });
     </script>
 </body>
+
 
 </html>
