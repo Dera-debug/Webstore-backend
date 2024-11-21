@@ -1,4 +1,4 @@
-let products=[
+let lessons=[
     {
         id: 1001,
         title: "Mastering Algebra: Foundations and Beyond",
