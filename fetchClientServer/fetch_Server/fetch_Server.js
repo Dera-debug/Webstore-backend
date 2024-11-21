@@ -48,7 +48,10 @@ app.use(function(req, res, next){
 });
 
 
-
+app.use((req, res, next) => {
+  req.url = req.url.trim(); // Remove leading/trailing spaces or newlines
+  next();
+});
 
 
 app.get("/", function(req, res){
@@ -163,34 +166,63 @@ app.get("/collections/orders", async (req, res) => {
 });
 
 
-// Update availableInventory for a specific product
+// // Update availableInventory for a specific product
+// app.put("/collections/products/:id", async (req, res) => {
+//   try {
+//     const db = await connectToDatabase();
+//     const productsCollection = db.collection("products");
+
+//     const productId = parseInt(req.params.id); // Extract product ID from URL params
+//     const { availableInventory } = req.body; // Get the new inventory count from the request body
+
+//     // Validate input
+//     if (typeof availableInventory !== "number" || availableInventory < 0) {
+//       return res.status(400).json({ error: "Invalid inventory number" });
+//     }
+
+//     // Find the product and update the available inventory
+//     const result = await productsCollection.updateOne(
+//       { id: productId }, // Find the product by its ID
+//       { $set: { availableInventory: availableInventory } } // Update the inventory
+//     );
+
+//     if (result.modifiedCount === 1) {
+//       res.status(200).json({ message: "Product inventory updated successfully" });
+//     } else {
+//       res.status(404).json({ error: "Product not found" });
+//     }
+//   } catch (error) {
+//     console.error("Error updating product inventory:", error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// });
+
+
 app.put("/collections/products/:id", async (req, res) => {
   try {
-    const db = await connectToDatabase();
-    const productsCollection = db.collection("products");
+      const db = await connectToDatabase();
+      const productsCollection = db.collection("products");
 
-    const productId = parseInt(req.params.id); // Extract product ID from URL params
-    const { availableInventory } = req.body; // Get the new inventory count from the request body
+      const productId = parseInt(req.params.id); // Extract product ID from URL params
+      const { availableInventory } = req.body; // Get the new inventory count from the request body
 
-    // Validate input
-    if (typeof availableInventory !== "number" || availableInventory < 0) {
-      return res.status(400).json({ error: "Invalid inventory number" });
-    }
+      if (typeof availableInventory !== "number" || availableInventory < 0) {
+          return res.status(400).json({ error: "Invalid inventory number" });
+      }
 
-    // Find the product and update the available inventory
-    const result = await productsCollection.updateOne(
-      { id: productId }, // Find the product by its ID
-      { $set: { availableInventory: availableInventory } } // Update the inventory
-    );
+      const result = await productsCollection.updateOne(
+          { id: productId },
+          { $set: { availableInventory: availableInventory } }
+      );
 
-    if (result.modifiedCount === 1) {
-      res.status(200).json({ message: "Product inventory updated successfully" });
-    } else {
-      res.status(404).json({ error: "Product not found" });
-    }
+      if (result.modifiedCount === 1) {
+          res.status(200).json({ message: "Product inventory updated successfully" });
+      } else {
+          res.status(404).json({ error: "Product not found" });
+      }
   } catch (error) {
-    console.error("Error updating product inventory:", error);
-    res.status(500).send("Internal Server Error");
+      console.error("Error updating product inventory:", error);
+      res.status(500).send("Internal Server Error");
   }
 });
 

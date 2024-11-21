@@ -117,7 +117,7 @@
                         <!-- Product Details -->
                         <div class="card-body">
                             <h5 class="card-title text-primary">{{ product.title }}</h5>
-                            <p class="card-text text-secondary">{{ product.description }}</p>
+                            <!-- <p class="card-text text-secondary">{{ product.description }}</p> -->
                             <p class="card-text text-secondary"><strong> Location: </strong>{{ product.location }}</p>
                             <p><strong>Price:</strong> ${{ product.price }}</p>
 
@@ -235,15 +235,7 @@
             data: {
                 sitename: "My Lesson App",
                 showProduct: true,
-                // product: {
-                //     id: 1001,
-                //     title: "Maths Lesson",
-                //     description: "A 25 pound bag of irresistible, organic goodness for your cat.",
-                //     price: 2000,
-                //     image: "https://images.unsplash.com/photo-1509869175650-a1d97972541a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                //     availableInventory: 10,
-                //     rating:3
-                // },
+               
                 products: [],//products,
 
                 cart: [],
@@ -327,7 +319,9 @@
                 // submitCheckOutForm() {
                 //     alert("Congratulations, order submitted :)");
     
-                submitCheckOutForm() {
+
+
+submitCheckOutForm() {
     const orderData = {
         name: this.order.name,
         phone: this.order.phone,
@@ -362,39 +356,55 @@
 },
 
 updateProductInventory(cart) {
+    const productQuantities = {};
+
+    // Calculate the total quantity of each product in the cart
     cart.forEach(product => {
-        fetch("http://localhost:3000/products/${product.id}", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id: product.id,
-                availableInventory: product.availableInventory - 1 // Subtract one from inventory for each lesson in the cart
+        if (!productQuantities[product.id]) {
+            productQuantities[product.id] = 0;
+        }
+        productQuantities[product.id]++;
+    });
+
+    // Update the available inventory for each product
+    Object.keys(productQuantities).forEach(productId => {
+        const quantity = productQuantities[productId];
+        const product = this.getProductById(parseInt(productId)); // Get the product details by ID
+
+        if (product) {
+            fetch(`http://localhost:3000/collections/products/${product.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    availableInventory: product.availableInventory - quantity // Subtract the total quantity of the product
+                })
             })
-        })
-        .then(response => {
-            if (!response.ok) {
-                console.error("Failed to update product inventory for:", product.title);
-            }
-        })
-        .catch(error => {
-            console.error("Error updating product inventory:", error);
-        });
+            .then(response => {
+                if (!response.ok) {
+                    console.error(`Failed to update inventory for product: ${product.title}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error updating product inventory:", error);
+            });
+        }
     });
 },
+
 
 resetOrderForm() {
     this.order = {
         name: "",
         phone: "",
-        gift: false,
+        gift: "Do not send as a gift",
         method: "Home"
     };
     this.cart = []; // Clear the cart after successful submission
+},
 
-              
-            },
+
                 canAddToTheCart(product) {
                     return product.availableInventory > this.cartCount(product.id);
                 },
