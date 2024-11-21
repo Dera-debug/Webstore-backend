@@ -62,15 +62,15 @@ app.get("/", function(req, res){
 //   res.send('S')
 // })
 
-// Example route to fetch products from MongoDB
-app.get("/collections/products", async (req, res) => {
+// Example route to fetch lessons from MongoDB
+app.get("/collections/lessons", async (req, res) => {
     try {
       const db = await connectToDatabase();
-      const productsCollection = db.collection("products"); // Replace "products" with your collection name
-      const products = await productsCollection.find({}).toArray();
-      res.json(products);
+      const lessonsCollection = db.collection("lessons"); // Replace "lessons" with your collection name
+      const lessons = await lessonsCollection.find({}).toArray();
+      res.json(lessons);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching lessons:", error);
       res.status(500).send("Internal Server Error");
     }
   });
@@ -167,10 +167,10 @@ app.get("/collections/orders", async (req, res) => {
 
 
 // // Update availableInventory for a specific product
-// app.put("/collections/products/:id", async (req, res) => {
+// app.put("/collections/lessons/:id", async (req, res) => {
 //   try {
 //     const db = await connectToDatabase();
-//     const productsCollection = db.collection("products");
+//     const lessonsCollection = db.collection("lessons");
 
 //     const productId = parseInt(req.params.id); // Extract product ID from URL params
 //     const { availableInventory } = req.body; // Get the new inventory count from the request body
@@ -181,7 +181,7 @@ app.get("/collections/orders", async (req, res) => {
 //     }
 
 //     // Find the product and update the available inventory
-//     const result = await productsCollection.updateOne(
+//     const result = await lessonsCollection.updateOne(
 //       { id: productId }, // Find the product by its ID
 //       { $set: { availableInventory: availableInventory } } // Update the inventory
 //     );
@@ -198,10 +198,10 @@ app.get("/collections/orders", async (req, res) => {
 // });
 
 
-app.put("/collections/products/:id", async (req, res) => {
+app.put("/collections/lessons/:id", async (req, res) => {
   try {
       const db = await connectToDatabase();
-      const productsCollection = db.collection("products");
+      const lessonsCollection = db.collection("lessons");
 
       const productId = parseInt(req.params.id); // Extract product ID from URL params
       const { availableInventory } = req.body; // Get the new inventory count from the request body
@@ -210,7 +210,7 @@ app.put("/collections/products/:id", async (req, res) => {
           return res.status(400).json({ error: "Invalid inventory number" });
       }
 
-      const result = await productsCollection.updateOne(
+      const result = await lessonsCollection.updateOne(
           { id: productId },
           { $set: { availableInventory: availableInventory } }
       );
