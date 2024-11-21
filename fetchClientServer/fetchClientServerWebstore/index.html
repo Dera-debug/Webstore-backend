@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap and Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+    <!-- <script src="products.js"></script> -->
+
+    <title>Lesson App</title>
+</head>
+
+<body class="bg-light text-dark">
+    <div id="app" class="container my-5">
+
+        <!-- Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary">{{ sitename }}</h1>
+            <button class="btn btn-primary" v-on:click="showCheckout" :disabled="itemsInTheCart === 0">
+                <span class="me-2">{{ itemsInTheCart }}</span>
+                <i class="fa-solid fa-cart-shopping"></i> Checkout
+            </button>
+        </header>
+
+        <!-- Top Navigation Bar for Filters -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 rounded">
+            <div class="container-fluid">
+                <form class="d-flex flex-grow-1 me-3">
+                    <!-- Search Bar -->
+                    <input type="text" v-model="searchQuery" placeholder="Search..." class="form-control me-2"
+                        aria-label="Search">
+                    <button class="btn btn-outline-primary" type="button">Search</button>
+                </form>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#filterNav"
+                    aria-controls="filterNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="filterNav">
+                    <div class="row w-100 gy-2 gx-3">
+                        <!-- Filter by Price -->
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><strong>Price:</strong></label>
+                            <select v-model="filters.price" class="form-select">
+                                <option value="">All</option>
+                                <option value="low">Low to High</option>
+                                <option value="high">High to Low</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter by Sorting -->
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><strong>Sort By:</strong></label>
+                            <select id="sortingAttribute" v-model="filters.sortingAttribute" class="form-select">
+                                <option value="" disabled>Select Attribute</option>
+                                <option value="title">Title</option>
+                                <option value="price">Price</option>
+                                <option value="rating">Rating</option>
+                                <option value="location">Location</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter by Sorting Order -->
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><strong>Order:</strong></label>
+                            <select id="sortingOrder" v-model="filters.sortingOrder" class="form-select">
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter by Subject -->
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><strong>Subject:</strong></label>
+                            <select v-model="filters.subject" class="form-select">
+                                <option value="">All</option>
+                                <option v-for="subject in uniqueSubjects" :value="subject">{{ subject }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter by Availability -->
+                        <div class="col-6 col-md-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="in-stock" v-model="filters.inStock">
+                                <label class="form-check-label" for="in-stock">In Stock</label>
+                            </div>
+                        </div>
+
+                        <!-- Filter by Location -->
+                        <!-- <div class="col-6 col-md-3">
+                    <label class="form-label"><strong>Location:</strong></label>
+                    <input type="text" v-model="filters.location" placeholder="Location..." class="form-control">
+                </div> -->
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+
+
+        <!-- Main Content -->
+        <main>
+            <!-- Product View -->
+            <div v-if="showProduct" class="row g-4">
+                <div v-for="product in filteredProducts" :key="product.id" class="col-sm-12 col-md-6 col-lg-3">
+                    <div class="card h-100 p-3">
+                        <!-- Product Image -->
+                        <img :src="product.image" class="card-img-top img-fluid"
+                            style="height: 200px; object-fit: cover;">
+
+                        <!-- Product Details -->
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ product.title }}</h5>
+                            <p class="card-text text-secondary">{{ product.description }}</p>
+                            <p class="card-text text-secondary"><strong> Location: </strong>{{ product.location }}</p>
+                            <p><strong>Price:</strong> ${{ product.price }}</p>
+
+                            <!-- Add to Cart Button -->
+                            <button class="btn btn-warning w-100 mt-3" v-if="canAddToTheCart(product)"
+                                v-on:click="addItemToTheCart(product)">
+                                Add to Cart
+                            </button>
+                            <button class="btn btn-secondary w-100 mt-3" v-else disabled>
+                                Add to Cart (Out of Stock)
+                            </button>
+                        </div>
+
+                        <span v-if="itemsLeft(product) === 0">Seats filled ! ></span>
+                        <span v-else-if="itemsLeft(product) < 5">Only {{itemsLeft(product)}} spaces left! ></span>
+                        <span v-else>Book your seat now!</span>
+
+                        <!-- Rating -->
+                        <div class="card-footer text-center">
+                            <span v-for="n in product.rating" class="text-warning">★</span>
+                            <span v-for="n in 5 - product.rating" class="text-muted">☆</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+            <!-- Checkout Page -->
+            <div v-else>
+                <h1 class="text-primary">Welcome to the Checkout page</h1>
+
+                <div v-if="cart.length > 0">
+                    <h3>Your Cart:</h3>
+                    <ul class="list-unstyled">
+                        <li v-for="itemId in cart" :key="itemId" class="d-flex align-items-center mb-3">
+                            <img :src="getProductById(itemId).image" class="img-fluid"
+                                style="width: 50px; height: auto; margin-right: 10px;">
+                            <div class="me-auto">
+                                <h5 class="mb-1">{{ getProductById(itemId).title }}</h5>
+                                <p class="mb-0"><strong>Price:</strong> ${{ getProductById(itemId).price }}</p>
+                            </div>
+                            <button class="btn btn-danger" v-on:click="removeItemFromCart(itemId)">Remove</button>
+                        </li>
+                    </ul>
+
+
+                    <form @submit.prevent="submitCheckOutForm">
+                        <div>
+                            <!-- Name Input -->
+                            <label for="name" class="form-label"><strong>Name:</strong></label>
+                            <input 
+                                type="text" 
+                                v-model.trim="order.name" 
+                                class="form-control" 
+                                id="name" 
+                                @input="validateName" 
+                                :class="{'is-invalid': !isNameValid && order.name}" 
+                                required
+                            >
+                            <div v-if="!isNameValid && order.name" class="invalid-feedback">
+                                Name can only contain letters.
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <!-- Phone Input -->
+                            <label for="phone" class="form-label"><strong>Phone:</strong></label>
+                            <input 
+                                type="text" 
+                                v-model.trim="order.phone" 
+                                class="form-control" 
+                                id="phone" 
+                                @input="validatePhone" 
+                                :class="{'is-invalid': !isPhoneValid && order.phone}" 
+                                required
+                            >
+                            <div v-if="!isPhoneValid && order.phone" class="invalid-feedback">
+                                Phone number can only contain numbers.
+                            </div>
+                        </div>
+                        
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="gift" class="form-check-input" v-model="order.gift">
+                            <label class="form-check-label" for="gift">Send as a gift?</label>
+                        </div>
+                        <div class="mb-3">
+                            <input type="radio" id="home" value="Home" v-model="order.method" class="form-check-input">
+                            <label class="form-check-label" for="home">Home</label>
+                            <input type="radio" id="business" value="Business" v-model="order.method"
+                                class="form-check-input ms-3">
+                            <label class="form-check-label" for="business">Business</label>
+                        </div>
+                         <button type="submit" :disabled="!isNameValid || !isPhoneValid" class="btn btn-primary">
+                            Place Order
+                        </button>
+                    </form>
+                </div>
+
+                <div v-else>
+                    <p>Your cart is empty. Please add lessons to proceed.</p>
+                </div>
+
+            </div>
+    </div>
+    </main>
+
+
+
+    <script>
+        let webstore = new Vue({
+            el: "#app",
+            data: {
+                sitename: "My Lesson App",
+                showProduct: true,
+                // product: {
+                //     id: 1001,
+                //     title: "Maths Lesson",
+                //     description: "A 25 pound bag of irresistible, organic goodness for your cat.",
+                //     price: 2000,
+                //     image: "https://images.unsplash.com/photo-1509869175650-a1d97972541a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                //     availableInventory: 10,
+                //     rating:3
+                // },
+                products: [],//products,
+
+                cart: [],
+
+                searchQuery: "",  // Added searchQuery to make it reactive
+                filters: {  // Added filters to make it reactive
+                    price: "",
+                    subject: "",
+                    inStock: false,
+                    location: "",
+                    sortingAttribute: null, // Attribute to sort by (e.g., 'price', 'title', 'rating')
+                    sortingOrder: 'null'    // Sorting order ('asc' for ascending, 'desc' for descending)
+
+                },
+
+                order: {
+                    name: "",
+                    phone:"",
+                    gift: "Do not send as a gift",
+                    method: "Home",
+                    isNameValid: true,
+        isPhoneValid: true,
+
+                },
+
+                states: {
+                    AL: "Alabama",
+                    AR: "Arizona",
+                    CA: "California",
+                    NV: "Nevada"
+                }
+            },
+
+            created: function () {
+                // fetch("http://localhost:3000/collections/products").then(
+                //     function(response){
+                //         response.text().then(
+                //             function(text) {
+                //                 alert(text);
+                //             }
+                //         )
+                //     }
+                // )
+                fetch("http://localhost:3000/collections/products").then(
+                    function (response) {
+                        response.json().then(
+                            function (json) {
+                                // alert(json);
+                                webstore.products = json;
+                            }
+                        )
+                    }
+                );
+            },
+
+            methods: {
+                showCheckout() {
+                    this.showProduct = !this.showProduct;
+                },
+                addItemToTheCart(product) {
+                    this.cart.push(product.id);
+                },
+
+
+                removeItemFromCart(itemId) {
+                    // Remove item from cart
+                    const index = this.cart.indexOf(itemId);
+                    if (index !== -1) {
+                        this.cart.splice(index, 1);
+                    }
+                    // Increase available inventory
+                    const product = this.getProductById(itemId);
+                    if (product) {
+                        product.availableInventory++;
+                    }
+                },
+                getProductById(id) {
+                    return this.products.find(product => product.id === id);
+                },
+
+                // submitCheckOutForm() {
+                //     alert("Congratulations, order submitted :)");
+    
+                submitCheckOutForm() {
+    const orderData = {
+        name: this.order.name,
+        phone: this.order.phone,
+        gift: this.order.gift,
+        method: this.order.method,
+        cart: this.cart.map(itemId => this.getProductById(itemId)) // Include product details in the order
+    };
+
+    fetch("http://localhost:3000/orders", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("Congratulations, your order has been submitted successfully!");
+
+            // Update the available inventory for each product in the order
+            this.updateProductInventory(orderData.cart);
+
+            this.resetOrderForm();
+        } else {
+            alert("There was an error submitting your order. Please try again.");
+        }
+    })
+    .catch(error => {
+        console.error("Error submitting order:", error);
+        alert("Unable to process your order at the moment.");
+    });
+},
+
+updateProductInventory(cart) {
+    cart.forEach(product => {
+        fetch("http://localhost:3000/products/${product.id}", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: product.id,
+                availableInventory: product.availableInventory - 1 // Subtract one from inventory for each lesson in the cart
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error("Failed to update product inventory for:", product.title);
+            }
+        })
+        .catch(error => {
+            console.error("Error updating product inventory:", error);
+        });
+    });
+},
+
+resetOrderForm() {
+    this.order = {
+        name: "",
+        phone: "",
+        gift: false,
+        method: "Home"
+    };
+    this.cart = []; // Clear the cart after successful submission
+
+              
+            },
+                canAddToTheCart(product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                cartCount(id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+                itemsLeft(product) {
+                    return product.availableInventory - this.cartCount(product.id);
+                },
+
+                applyFilters() {
+                    // Custom logic for applying filters can be added here
+                },
+                canAddToTheCart(product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                cartCount(id) {
+                    return this.cart.filter(cartItem => cartItem === id).length;
+                },
+                itemsLeft(product) {
+                    return product.availableInventory - this.cartCount(product.id);
+                },
+
+            
+            validateName() {
+        // Allow only letters (including spaces for multi-word names)
+        const nameRegex = /^[A-Za-z\s]+$/;
+        this.isNameValid = nameRegex.test(this.order.name);
+    },
+    validatePhone() {
+        // Allow only numeric characters
+        const phoneRegex = /^\d+$/;
+        this.isPhoneValid = phoneRegex.test(this.order.phone);
+    },
+},
+            computed: {
+                itemsInTheCart() {
+                    return this.cart.length || 0;
+                },
+
+             
+
+
+                filteredProducts() {
+                    // Filter products based on searchQuery, price, subject, inStock, and location
+                    let filtered = this.products.filter(product => {
+                        // let matchesSearch = product.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        let matchesSearch = Object.values(product).some(value =>
+                            value.toString().toLowerCase().includes(this.searchQuery.toLowerCase())
+                        );
+                        //    console.log("Matches search:", matchesSearch, "for product:", product.title);
+
+                        let matchesPrice = !this.filters.price ||
+                            (this.filters.price === "low" ? product.price <= 50 : product.price > 50);
+                        let matchesSubject = !this.filters.subject || product.subject === this.filters.subject;
+                        let matchesInStock = !this.filters.inStock || product.availableInventory > 0;
+                        let matchesLocation = !this.filters.location || product.location.includes(this.filters.location);
+
+                        return matchesSearch && matchesPrice && matchesSubject && matchesInStock && matchesLocation;
+                    });
+
+                    // Apply sorting based on selected price filter
+                    //     if (this.filters.price === "low") {
+                    //         filtered.sort((a, b) => a.price - b.price);
+                    //     } else if (this.filters.price === "high") {
+                    //         filtered.sort((a, b) => b.price - a.price);
+                    //     }
+
+                    //     return filtered;
+                    // },
+
+                    if (this.filters.sortingAttribute) {
+                        filtered.sort((a, b) => {
+                            let attrA = a[this.filters.sortingAttribute];
+                            let attrB = b[this.filters.sortingAttribute];
+
+                            // Handle numeric and string sorting
+                            if (typeof attrA === 'number' && typeof attrB === 'number') {
+                                return this.filters.sortingOrder === 'asc' ? attrA - attrB : attrB - attrA;
+                            } else if (typeof attrA === 'string' && typeof attrB === 'string') {
+                                return this.filters.sortingOrder === 'asc'
+                                    ? attrA.localeCompare(attrB)
+                                    : attrB.localeCompare(attrA);
+                            }
+                            return 0; // If attribute types are mismatched or undefined, keep original order
+                        });
+                    }
+
+                    return filtered;
+                },
+
+
+                uniqueSubjects() {
+                    return [...new Set(this.products.map(product => product.subject))];
+                }
+
+
+            }
+        });
+    </script>
+</body>
+
+
+</html>

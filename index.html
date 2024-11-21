@@ -112,6 +112,21 @@
             <!-- Checkout Page -->
             <div v-else>
                 <h1 class="text-primary">Welcome to the Checkout page</h1>
+                
+                <div v-if="cart.length > 0">
+                    <h3>Your Cart:</h3>
+                    <ul class="list-unstyled">
+                        <li v-for="itemId in cart" :key="itemId" class="d-flex align-items-center mb-3">
+                            <img :src="getProductById(itemId).image" class="img-fluid" style="width: 50px; height: auto; margin-right: 10px;">
+                            <div class="me-auto">
+                                <h5 class="mb-1">{{ getProductById(itemId).title }}</h5>
+                                <p class="mb-0"><strong>Price:</strong> ${{ getProductById(itemId).price }}</p>
+                            </div>
+                            <button class="btn btn-danger" v-on:click="removeItemFromCart(itemId)">Remove</button>
+                        </li>
+                    </ul>
+            
+                
                 <form @submit.prevent="submitCheckOutForm">
                     <div class="mb-3">
                         <label for="name" class="form-label"><strong>Name:</strong></label>
@@ -150,11 +165,16 @@
                     <button type="submit" class="btn btn-primary">Place Order</button>
                 </form>
             </div>
+
+            <div v-else>
+                <p>Your cart is empty. Please add lessons to proceed.</p>
+            </div>
+
         </div>
     </main>
     
 
-    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+   
     <script>
         let webstore = new Vue({
             el: "#app",
@@ -205,6 +225,28 @@
                 addItemToTheCart(product) {
                     this.cart.push(product.id);
                 },
+
+
+                removeItemFromCart(itemId) {
+        // Remove item from cart
+        const index = this.cart.indexOf(itemId);
+        if (index !== -1) {
+            this.cart.splice(index, 1);
+        }
+        // Increase available inventory
+        const product = this.getProductById(itemId);
+        if (product) {
+            product.availableInventory++;
+        }
+    },
+    getProductById(id) {
+        return this.products.find(product => product.id === id);
+    },
+
+
+
+
+                
                 submitCheckOutForm() {
                     alert("Congratulations, order submitted :)");
                 },
