@@ -222,7 +222,7 @@ app.put("/collections/lessons/:id", async (req, res) => {
       }
   } catch (error) {
       console.error("Error updating product inventory:", error);
-      res.status(500).send("Internal Server Error");
+      res.status(500).send("Internal Server Error!");
   }
 });
 
