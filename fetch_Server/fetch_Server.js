@@ -2,6 +2,7 @@ const express=require("express");
 const cors= require("cors");
 const morgan = require("morgan");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const path = require("path");
 
 // MongoDB connection string
 const uri = "mongodb+srv://WebstoreUser:Deborah_3180@webstorecluster.zoayw.mongodb.net/?retryWrites=true&w=majority";
@@ -47,6 +48,14 @@ app.use(function(req, res, next){
   next();
 });
 
+// Serve static files for lesson images
+const imagesPath = path.join(__dirname, "Webstore-frontend/images");
+app.use("/images", express.static(imagesPath));
+
+// Custom middleware to handle missing image files
+app.use("/images", (req, res) => {
+  res.status(404).json({ error: "Image not found" });
+});
 
 app.use((req, res, next) => {
   req.url = req.url.trim(); // Remove leading/trailing spaces or newlines
