@@ -49,7 +49,7 @@ app.use(function(req, res, next){
 });
 
 // Serve static files for lesson images
-const imagesPath = path.join(__dirname, "Webstore-frontend/images");
+const imagesPath = path.join(__dirname, "/images");
 app.use("/images", express.static(imagesPath));
 
 // Custom middleware to handle missing image files
