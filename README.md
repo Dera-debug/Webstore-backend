@@ -10,3 +10,7 @@ https://dera-debug.github.io/Webstore-frontend/
 
 <!-- [AWS (or render.com) Express.js App] the link to the AWS (or render.com) route that returns all the lessons -->
 https://webstore-backend-ba5h.onrender.com/collections/lessons
+
+
+<!-- Bootsrap library used -->
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
