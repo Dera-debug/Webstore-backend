@@ -67,10 +67,6 @@ app.get("/", function(req, res){
     res.send("Welcome to our lesson store");
 });
 
-// app.get("/", function(req, res, next){
-//   res.send('S')
-// })
-
 // Example route to fetch lessons from MongoDB
 app.get("/collections/lessons", async (req, res) => {
     try {
@@ -176,37 +172,6 @@ app.get("/collections/orders", async (req, res) => {
 
 
 // // Update availableInventory for a specific product
-// app.put("/collections/lessons/:id", async (req, res) => {
-//   try {
-//     const db = await connectToDatabase();
-//     const lessonsCollection = db.collection("lessons");
-
-//     const productId = parseInt(req.params.id); // Extract product ID from URL params
-//     const { availableInventory } = req.body; // Get the new inventory count from the request body
-
-//     // Validate input
-//     if (typeof availableInventory !== "number" || availableInventory < 0) {
-//       return res.status(400).json({ error: "Invalid inventory number" });
-//     }
-
-//     // Find the product and update the available inventory
-//     const result = await lessonsCollection.updateOne(
-//       { id: productId }, // Find the product by its ID
-//       { $set: { availableInventory: availableInventory } } // Update the inventory
-//     );
-
-//     if (result.modifiedCount === 1) {
-//       res.status(200).json({ message: "Product inventory updated successfully" });
-//     } else {
-//       res.status(404).json({ error: "Product not found" });
-//     }
-//   } catch (error) {
-//     console.error("Error updating product inventory:", error);
-//     res.status(500).send("Internal Server Error");
-//   }
-// });
-
-
 app.put("/collections/lessons/:id", async (req, res) => {
   try {
       const db = await connectToDatabase();
@@ -242,7 +207,7 @@ app.use(function(req, res){
 });
 
 
-
+//calling the port
 app.listen(3000, function(){
     console.log("App has started on port 3000");
 });
